@@ -16,6 +16,7 @@
 
 package net.fabricmc.fabric.api.client.keybinding.v1;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 
@@ -54,5 +55,17 @@ public final class KeyBindingHelper {
 	 */
 	public static InputUtil.Key getBoundKeyOf(KeyBinding keyBinding) {
 		return ((KeyCodeAccessor) keyBinding).fabric_getBoundKey();
+	}
+
+	/**
+	 * When on a screen, {@link KeyBinding#setPressed(boolean)} won't be called by the client,
+	 * making {@link KeyBinding#isPressed()} always returns {@code false}.
+	 * This method returns whether a keybinding is pressed regardless of that.
+	 *
+	 * @param keyBinding the keybinding
+	 * @return whether the keybinding is pressed
+	 */
+	public static boolean isPressedIgnoreScreen(KeyBinding keyBinding) {
+		return InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), getBoundKeyOf(keyBinding).getCode());
 	}
 }
