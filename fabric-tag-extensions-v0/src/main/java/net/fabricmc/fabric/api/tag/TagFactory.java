@@ -19,9 +19,11 @@ package net.fabricmc.fabric.api.tag;
 import java.util.function.Supplier;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.EntityType;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.FluidTags;
@@ -30,6 +32,8 @@ import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.Tag;
 import net.minecraft.tag.TagGroup;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.BuiltinRegistries;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
@@ -39,6 +43,15 @@ import net.fabricmc.fabric.impl.tag.extension.TagFactoryImpl;
 
 /**
  * A factory for accessing datapack tags.
+ *
+ * <p><b>Note:</b> {@link BuiltinRegistries} does not contain the actual entries that the server has,
+ * so comparison would likely fail if you try to use anything from it. Use the actual entry from
+ * {@link DynamicRegistryManager}. To warn of this, Fabric will crash if someone tries to call
+ * {@link Tag#contains} with entry from {@link BuiltinRegistries}.
+ *
+ * @see MinecraftServer#getRegistryManager()
+ * @see ClientPlayNetworkHandler#getRegistryManager()
+ * @see DynamicRegistryManager#get(RegistryKey)
  */
 public interface TagFactory<T> {
 	TagFactory<Item> ITEM = of(ItemTags::getTagGroup);

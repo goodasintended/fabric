@@ -19,9 +19,13 @@ package net.fabricmc.fabric.impl.tag.extension;
 import java.util.List;
 import java.util.function.Supplier;
 
-import net.minecraft.tag.TagGroup;
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagGroup;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.BuiltinRegistries;
+import net.minecraft.util.registry.Registry;
 
 import net.fabricmc.fabric.api.tag.FabricTag;
 
@@ -31,13 +35,26 @@ public final class TagDelegate<T> implements Tag.Identified<T>, FabricTag<T>, Fa
 	private volatile Target<T> target;
 	private int clearCount;
 
-	public TagDelegate(Identifier id, Supplier<TagGroup<T>> containerSupplier) {
+	@Nullable
+	private final Registry<T> staticRegistry;
+
+	/**
+	 * @param staticRegistry a registry from {@link BuiltinRegistries}, used for validating {@link #contains}.
+	 *                       Should be {@code null} if this is a tag for a static registry.
+	 */
+	public TagDelegate(Identifier id, Supplier<TagGroup<T>> containerSupplier, @Nullable Registry<T> staticRegistry) {
 		this.id = id;
 		this.containerSupplier = containerSupplier;
+		this.staticRegistry = staticRegistry;
 	}
 
 	@Override
 	public boolean contains(T var1) {
+		// Throw an exception if the object is from static registry while this is a dynamic registry tag
+		if (staticRegistry != null && staticRegistry.getRawId(var1) != -1) {
+			throw new IllegalArgumentException("Tried to check for object from static registry, use dynamic registry instance from the server instead!");
+		}
+
 		return getTag().contains(var1);
 	}
 

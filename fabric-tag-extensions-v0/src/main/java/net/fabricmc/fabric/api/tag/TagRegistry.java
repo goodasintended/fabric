@@ -38,7 +38,7 @@ public final class TagRegistry {
 	private TagRegistry() { }
 
 	public static <T> Tag.Identified<T> create(Identifier id, Supplier<TagGroup<T>> containerSupplier) {
-		return new TagDelegate<>(id, containerSupplier);
+		return new TagDelegate<>(id, containerSupplier, null);
 	}
 
 	/**

@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ServerResourceManager;
@@ -36,6 +37,7 @@ import net.minecraft.tag.TagGroup;
 import net.minecraft.tag.TagGroupLoader;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.RegistryOps;
+import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
@@ -50,7 +52,7 @@ public final class TagFactoryImpl<T> implements TagFactory<T> {
 	public static final Map<RegistryKey<? extends Registry<?>>, RequiredTagList<?>> TAG_LISTS = new HashMap<>();
 
 	public static <T> TagFactory<T> of(Supplier<TagGroup<T>> tagGroupSupplier) {
-		return new TagFactoryImpl<>(tagGroupSupplier);
+		return new TagFactoryImpl<>(tagGroupSupplier, null);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -67,7 +69,7 @@ public final class TagFactoryImpl<T> implements TagFactory<T> {
 			TAG_LISTS.put(registryKey, tagList);
 		}
 
-		return of(tagList::getGroup);
+		return new TagFactoryImpl<>(tagList::getGroup, (Registry<T>) BuiltinRegistries.REGISTRIES.get(registryKey.getValue()));
 	}
 
 	/**
@@ -104,14 +106,17 @@ public final class TagFactoryImpl<T> implements TagFactory<T> {
 		return DynamicRegistryManagerAccessor.getInfos().containsKey(tagList.getRegistryKey());
 	}
 
+	@Nullable
+	private final Registry<T> staticRegistry;
 	private final Supplier<TagGroup<T>> tagGroupSupplier;
 
-	private TagFactoryImpl(Supplier<TagGroup<T>> tagGroupSupplier) {
+	private TagFactoryImpl(Supplier<TagGroup<T>> tagGroupSupplier, @Nullable Registry<T> staticRegistry) {
 		this.tagGroupSupplier = tagGroupSupplier;
+		this.staticRegistry = staticRegistry;
 	}
 
 	@Override
 	public Tag.Identified<T> create(Identifier id) {
-		return new TagDelegate<>(id, tagGroupSupplier);
+		return new TagDelegate<>(id, tagGroupSupplier, staticRegistry);
 	}
 }

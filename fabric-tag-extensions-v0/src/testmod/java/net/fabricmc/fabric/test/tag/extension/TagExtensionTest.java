@@ -21,12 +21,15 @@ import static net.minecraft.server.command.CommandManager.literal;
 import java.util.Map;
 import java.util.Optional;
 
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.tag.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
@@ -55,6 +58,18 @@ public class TagExtensionTest implements ModInitializer {
 						});
 						context.getSource().sendFeedback(text, false);
 					});
+					return 1;
+				}))
+				.then(literal("contains_test").executes(context -> {
+					ServerCommandSource source = context.getSource();
+					try {
+						// The intended behavior would be the crash, but since this is a test, we'll catch it.
+						source.sendFeedback(new LiteralText("static: " + FACTORY_TEST.contains(BuiltinRegistries.BIOME.get(BiomeKeys.DESERT))), false);
+					} catch (IllegalArgumentException e) {
+						source.sendFeedback(new LiteralText("static: " + e.getMessage()), false);
+						e.printStackTrace();
+					}
+					source.sendFeedback(new LiteralText("dynamic: " + FACTORY_TEST.contains(source.getServer().getRegistryManager().get(Registry.BIOME_KEY).get(BiomeKeys.DESERT))), false);
 					return 1;
 				}))));
 	}
